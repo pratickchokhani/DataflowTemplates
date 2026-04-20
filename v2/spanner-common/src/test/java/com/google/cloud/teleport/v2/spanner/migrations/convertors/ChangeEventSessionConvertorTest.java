@@ -713,4 +713,75 @@ public class ChangeEventSessionConvertorTest {
     assertEquals("", actualEvent.get("migration_shard_id").asText());
     assertEquals("migration_shard_id", actualEvent.get(Constants.SHARD_ID_COLUMN_NAME).asText());
   }
+
+  @Test
+  public void getShardIdReturnsEmptyWhenMapsAreEmpty() {
+    Schema schema = getShardedSchemaObject();
+    ChangeEventSessionConvertor changeEventSessionConvertor =
+        new ChangeEventSessionConvertor(
+            schema, null, new TransformationContext(), new ShardingContext(), "mysql", false);
+
+    JSONObject changeEvent = new JSONObject();
+    changeEvent.put("name", "A");
+    changeEvent.put(Constants.EVENT_STREAM_NAME, "stream1");
+    changeEvent.put(Constants.EVENT_SCHEMA_KEY, "db_01");
+    changeEvent.put(Constants.EVENT_TABLE_NAME_KEY, "people");
+    JsonNode ce = parseChangeEvent(changeEvent.toString());
+
+    String shardId = changeEventSessionConvertor.getShardId(ce);
+    assertEquals(shardId, "");
+  }
+
+  @Test
+  public void getShardIdReturnsEmptyWhenStreamNameMissing() {
+    Schema schema = getShardedSchemaObject();
+    ShardingContext shardingContext = getShardingContext();
+    ChangeEventSessionConvertor changeEventSessionConvertor =
+        new ChangeEventSessionConvertor(
+            schema, null, new TransformationContext(), shardingContext, "mysql", false);
+
+    JSONObject changeEvent = new JSONObject();
+    changeEvent.put("name", "A");
+    changeEvent.put(Constants.EVENT_SCHEMA_KEY, "db_01");
+    changeEvent.put(Constants.EVENT_TABLE_NAME_KEY, "people");
+    JsonNode ce = parseChangeEvent(changeEvent.toString());
+
+    String shardId = changeEventSessionConvertor.getShardId(ce);
+    assertEquals(shardId, "");
+  }
+
+  @Test
+  public void getShardIdReturnsEmptyWhenSchemaKeyMissingWithShardingContext() {
+    Schema schema = getShardedSchemaObject();
+    ShardingContext shardingContext = getShardingContext();
+    ChangeEventSessionConvertor changeEventSessionConvertor =
+        new ChangeEventSessionConvertor(
+            schema, null, new TransformationContext(), shardingContext, "mysql", false);
+
+    JSONObject changeEvent = new JSONObject();
+    changeEvent.put("name", "A");
+    changeEvent.put(Constants.EVENT_STREAM_NAME, "stream1");
+    changeEvent.put(Constants.EVENT_TABLE_NAME_KEY, "people");
+    JsonNode ce = parseChangeEvent(changeEvent.toString());
+
+    String shardId = changeEventSessionConvertor.getShardId(ce);
+    assertEquals(shardId, "");
+  }
+
+  @Test
+  public void getShardIdReturnsEmptyWhenSchemaKeyMissingWithTransformationContext() {
+    Schema schema = getShardedSchemaObject();
+    TransformationContext transformationContext = getTransformationContext();
+    ChangeEventSessionConvertor changeEventSessionConvertor =
+        new ChangeEventSessionConvertor(
+            schema, null, transformationContext, new ShardingContext(), "mysql", false);
+
+    JSONObject changeEvent = new JSONObject();
+    changeEvent.put("name", "A");
+    changeEvent.put(Constants.EVENT_TABLE_NAME_KEY, "people");
+    JsonNode ce = parseChangeEvent(changeEvent.toString());
+
+    String shardId = changeEventSessionConvertor.getShardId(ce);
+    assertEquals(shardId, "");
+  }
 }
