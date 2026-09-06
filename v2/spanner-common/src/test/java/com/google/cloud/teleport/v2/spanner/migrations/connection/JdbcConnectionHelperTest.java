@@ -102,6 +102,8 @@ public class JdbcConnectionHelperTest {
 
     List<Shard> mockShards = Collections.singletonList(mockShard);
     when(mockRequest.getShards()).thenReturn(mockShards);
+    when(mockRequest.getConnectionUrlToShardMap())
+        .thenReturn(Map.of("jdbc:mysql://localhost:3306/testdb", mockShard));
     when(mockRequest.getDriver()).thenReturn("com.mysql.cj.jdbc.Driver");
     when(mockRequest.getMaxConnections()).thenReturn(10);
     when(mockRequest.getConnectionInitQuery()).thenReturn("SELECT 1");
@@ -150,6 +152,8 @@ public class JdbcConnectionHelperTest {
 
     List<Shard> mockShards = Collections.singletonList(mockShard);
     when(mockRequest.getShards()).thenReturn(mockShards);
+    when(mockRequest.getConnectionUrlToShardMap())
+        .thenReturn(Map.of("jdbc:mysql://localhost:3306/testdb", mockShard));
     when(mockRequest.getDriver()).thenReturn("com.mysql.cj.jdbc.Driver");
     when(mockRequest.getMaxConnections()).thenReturn(10);
     when(mockRequest.getConnectionInitQuery()).thenReturn("SELECT 1");

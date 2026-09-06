@@ -39,6 +39,8 @@ import org.apache.beam.sdk.options.PipelineOptions;
 
 public class PostgreSQLSpToSrcSourceConnector implements ISpToSrcSourceConnector {
 
+  private static final String JDBC_URL_PREFIX = "jdbc:postgresql://";
+
   private final IConnectionHelper connectionHelper;
 
   public PostgreSQLSpToSrcSourceConnector() {
@@ -61,7 +63,7 @@ public class PostgreSQLSpToSrcSourceConnector implements ISpToSrcSourceConnector
   }
 
   String getConnectionUrl(Shard shard) {
-    return "jdbc:postgresql://" + shard.getHost() + ":" + shard.getPort() + "/" + shard.getDbName();
+    return ConnectionHelperRequest.createDefaultConnectionUrl(shard, JDBC_URL_PREFIX);
   }
 
   @Override
@@ -74,7 +76,7 @@ public class PostgreSQLSpToSrcSourceConnector implements ISpToSrcSourceConnector
     if (!connectionHelper.isConnectionPoolInitialized()) {
       ConnectionHelperRequest request =
           new ConnectionHelperRequest(
-              shards, null, maxConnections, "org.postgresql.Driver", null, "jdbc:postgresql://");
+              shards, null, maxConnections, "org.postgresql.Driver", null, JDBC_URL_PREFIX);
       connectionHelper.init(request);
     }
   }

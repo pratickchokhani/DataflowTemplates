@@ -51,16 +51,10 @@ public class JdbcConnectionHelper implements IConnectionHelper<Connection> {
     LOG.info(
         "Initializing connection pool with size: {}", connectionHelperRequest.getMaxConnections());
     Map<String, HikariDataSource> localMap = new HashMap<>();
-    for (Shard shard : connectionHelperRequest.getShards()) {
-      String sourceConnectionUrl =
-          new StringBuilder()
-              .append(connectionHelperRequest.getJdbcUrlPrefix())
-              .append(shard.getHost())
-              .append(":")
-              .append(shard.getPort())
-              .append("/")
-              .append(shard.getDbName())
-              .toString();
+    for (Map.Entry<String, Shard> entry :
+        connectionHelperRequest.getConnectionUrlToShardMap().entrySet()) {
+      String sourceConnectionUrl = entry.getKey();
+      Shard shard = entry.getValue();
       HikariConfig config = new HikariConfig();
       config.setJdbcUrl(sourceConnectionUrl);
       config.setUsername(shard.getUserName());

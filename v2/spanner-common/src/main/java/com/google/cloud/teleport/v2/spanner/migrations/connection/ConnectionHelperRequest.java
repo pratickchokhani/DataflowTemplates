@@ -16,7 +16,11 @@
 package com.google.cloud.teleport.v2.spanner.migrations.connection;
 
 import com.google.cloud.teleport.v2.spanner.migrations.shard.Shard;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a request to initialize a connection helper with the necessary parameters.
@@ -25,7 +29,7 @@ import java.util.List;
  * database or a data source. It includes:
  *
  * <ul>
- *   <li>A list of {@link Shard} objects representing the database shards.
+ *   <li>A map of connection URLs to {@link Shard} objects representing the database shards.
  *   <li>Optional connection properties as a {@link String}.
  *   <li>The maximum number of connections allowed.
  *   <li>The name of the driver to connect to source.
@@ -33,7 +37,7 @@ import java.util.List;
  * </ul>
  */
 public class ConnectionHelperRequest {
-  private List<Shard> shards;
+  private Map<String, Shard> connectionUrlToShardMap;
   private String properties;
   private int maxConnections;
   private String driver;
@@ -41,7 +45,13 @@ public class ConnectionHelperRequest {
   private String jdbcUrlPrefix;
 
   public List<Shard> getShards() {
-    return shards;
+    return connectionUrlToShardMap != null
+        ? new ArrayList<>(connectionUrlToShardMap.values())
+        : Collections.emptyList();
+  }
+
+  public Map<String, Shard> getConnectionUrlToShardMap() {
+    return connectionUrlToShardMap;
   }
 
   public String getProperties() {
@@ -64,6 +74,17 @@ public class ConnectionHelperRequest {
     return jdbcUrlPrefix;
   }
 
+  public static String createDefaultConnectionUrl(Shard shard, String jdbcUrlPrefix) {
+    return new StringBuilder()
+        .append(jdbcUrlPrefix)
+        .append(shard.getHost())
+        .append(":")
+        .append(shard.getPort())
+        .append("/")
+        .append(shard.getDbName())
+        .toString();
+  }
+
   public ConnectionHelperRequest(
       List<Shard> shards,
       String properties,
@@ -71,7 +92,27 @@ public class ConnectionHelperRequest {
       String driver,
       String connectionInitQuery,
       String jdbcUrlPrefix) {
-    this.shards = shards;
+    if (shards != null) {
+      this.connectionUrlToShardMap = new ConcurrentHashMap<>();
+      for (Shard shard : shards) {
+        this.connectionUrlToShardMap.put(createDefaultConnectionUrl(shard, jdbcUrlPrefix), shard);
+      }
+    }
+    this.properties = properties;
+    this.maxConnections = maxConnections;
+    this.driver = driver;
+    this.connectionInitQuery = connectionInitQuery;
+    this.jdbcUrlPrefix = jdbcUrlPrefix;
+  }
+
+  public ConnectionHelperRequest(
+      Map<String, Shard> connectionUrlToShardMap,
+      String properties,
+      int maxConnections,
+      String driver,
+      String connectionInitQuery,
+      String jdbcUrlPrefix) {
+    this.connectionUrlToShardMap = connectionUrlToShardMap;
     this.properties = properties;
     this.maxConnections = maxConnections;
     this.driver = driver;
